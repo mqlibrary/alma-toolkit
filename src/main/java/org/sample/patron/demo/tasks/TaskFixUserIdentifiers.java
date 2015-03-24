@@ -136,6 +136,12 @@ public class TaskFixUserIdentifiers implements Task
 			log.info("processing user: {}", oldPrimaryId);
 
 			String newPrimaryId = identifiers.get(oldPrimaryId.toLowerCase());
+			if (newPrimaryId == null)
+			{
+				log.warn("user partyId not found: {}", oldPrimaryId);
+				continue;
+			}
+
 			String oneId = cns.get(oldPrimaryId.toLowerCase());
 			if (oneId == null)
 				oneId = oldPrimaryId;
