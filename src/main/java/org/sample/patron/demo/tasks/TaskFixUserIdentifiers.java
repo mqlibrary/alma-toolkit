@@ -11,11 +11,15 @@ import java.util.Scanner;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBElement;
 
+import org.sample.patron.demo.entity.ObjectFactory;
 import org.sample.patron.demo.entity.User;
-import org.sample.patron.demo.entity.Users;
+import org.sample.patron.demo.entity.UserIdentifier;
+import org.sample.patron.demo.entity.UserIdentifier.IdType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +37,10 @@ public class TaskFixUserIdentifiers implements Task
 	private String userListFilename = null;
 
 	private String identifiersFilename = null;
+
+	private String cnFilename = null;
+
+	private ObjectFactory of = new ObjectFactory();
 
 	// Disable the default empty constructor. We just want to use the
 	// parameterized one.
@@ -62,6 +70,11 @@ public class TaskFixUserIdentifiers implements Task
 					if (args.length > (x + 1))
 						userListFilename = args[++x];
 				}
+				else if (args[x].equals("-cns"))
+				{
+					if (args.length > (x + 1))
+						cnFilename = args[++x];
+				}
 			}
 
 		log.debug("initialised {}", this.getClass().getCanonicalName());
@@ -73,6 +86,7 @@ public class TaskFixUserIdentifiers implements Task
 		log.info("executing task: {}", this.getClass().getSimpleName());
 
 		Map<String, String> identifiers = null;
+		Map<String, String> cns = null;
 		List<String> userList = null;
 
 		if (userListFilename == null)
@@ -87,6 +101,12 @@ public class TaskFixUserIdentifiers implements Task
 			return;
 		}
 
+		if (cnFilename == null)
+		{
+			log.error("cn filename required.");
+			return;
+		}
+
 		try
 		{
 			File userListFile = new File(userListFilename);
@@ -94,6 +114,9 @@ public class TaskFixUserIdentifiers implements Task
 
 			File idFile = new File(identifiersFilename);
 			identifiers = getIdentifiers(idFile);
+
+			File cnFile = new File(cnFilename);
+			cns = getCnCaseMapping(cnFile);
 		}
 		catch (FileNotFoundException nfe)
 		{
@@ -103,29 +126,66 @@ public class TaskFixUserIdentifiers implements Task
 
 		String url = config.getProperty("ws.url.alma");
 		String key = config.getProperty("ws.url.alma.key");
+
 		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target(url);
 		target = target.path("users").queryParam("apikey", key);
-		
+
 		for (String oldPrimaryId : userList)
 		{
-			String newPrimaryId = identifiers.get(oldPrimaryId.toLowerCase());
-		}
-		
-		
-		
-		// we avoid dealing with any XML/JSON. We just make the call.
-		Users users = target.request(MediaType.APPLICATION_XML_TYPE).get(Users.class);
-		for (User user : users.getUser())
-		{
-			// extract the information into an object for displaying purposes.
-			Object[] param = new Object[4];
-			param[0] = user.getPrimaryId();
-			param[1] = user.getFirstName();
-			param[2] = user.getLastName();
-			param[3] = user.getStatus().getValue();
+			log.info("processing user: {}", oldPrimaryId);
 
-			log.info("[{}] : {} {} ({})", param);
+			String newPrimaryId = identifiers.get(oldPrimaryId.toLowerCase());
+			String oneId = cns.get(oldPrimaryId.toLowerCase());
+			if (oneId == null)
+				oneId = oldPrimaryId;
+
+			WebTarget t = target.path(oldPrimaryId);
+			User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
+			log.info("fetched user: {}", user.getPrimaryId());
+
+			// remove PARTY_ID, ONE_ID, INSTITUTION_ID
+			List<UserIdentifier> idsToRemove = new ArrayList<UserIdentifier>(5);
+			for (UserIdentifier i : user.getUserIdentifiers().getUserIdentifier())
+			{
+				if ("PARTY_ID".equals(i.getIdType().getValue()))
+					idsToRemove.add(i);
+				if ("ONE_ID".equals(i.getIdType().getValue()))
+					idsToRemove.add(i);
+				if ("INST_ID".equals(i.getIdType().getValue()))
+					idsToRemove.add(i);
+
+				log.info("identifiers [{}]: {}", i.getIdType().getValue(), i.getValue());
+			}
+
+			for (UserIdentifier i : idsToRemove)
+				user.getUserIdentifiers().getUserIdentifier().remove(i);
+
+			// save with oldPrimaryId
+			JAXBElement<User> jaxbUser = of.createUser(user);
+			user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+			log.info("updated user: {}", user.getPrimaryId());
+
+			for (UserIdentifier i : user.getUserIdentifiers().getUserIdentifier())
+				log.info("identifiers [{}]: {}", i.getIdType().getValue(), i.getValue());
+
+			// add new primaryId, oneId
+			IdType idType = of.createUserIdentifierIdType();
+			idType.setValue("ONE_ID");
+			idType.setDesc("ONE_ID");
+
+			UserIdentifier userIdentifier = of.createUserIdentifier();
+			userIdentifier.setIdType(idType);
+			userIdentifier.setStatus("ACTIVE");
+			userIdentifier.setValue(oneId);
+
+			user.getUserIdentifiers().getUserIdentifier().add(userIdentifier);
+			user.setPrimaryId(newPrimaryId);
+
+			// save with oldPrimaryId
+			jaxbUser = of.createUser(user);
+			user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+			log.info("updated user: {}", user.getPrimaryId());
 		}
 	}
 
@@ -134,8 +194,9 @@ public class TaskFixUserIdentifiers implements Task
 	{
 		Map<String, String> options = new HashMap<String, String>();
 
-		options.put("-limit x", "limit the number of results to return");
-		options.put("-offset x", "starting index of results to return");
+		options.put("-cns filename", "Common Names from AD");
+		options.put("-users filename", "list of user identifiers to process");
+		options.put("-ids filename", "list of OneID mappings to PartyID");
 
 		return options;
 	}
@@ -154,6 +215,9 @@ public class TaskFixUserIdentifiers implements Task
 				continue;
 
 			String[] parts = line.split(",");
+			if (parts == null || parts.length < 2)
+				continue;
+
 			result.put(parts[0].toLowerCase(), parts[1]);
 		}
 		scanner.close();
@@ -174,7 +238,31 @@ public class TaskFixUserIdentifiers implements Task
 			if (line == null || "".equals(line))
 				continue;
 
-			result.add(line);
+			String[] parts = line.split(",");
+			if (parts == null || parts.length < 1)
+				continue;
+
+			result.add(parts[0]);
+		}
+		scanner.close();
+
+		return result;
+	}
+
+	private Map<String, String> getCnCaseMapping(File file) throws FileNotFoundException
+	{
+		Map<String, String> result = new HashMap<String, String>(300000);
+
+		Scanner scanner = null;
+		scanner = new Scanner(file);
+		scanner.nextLine(); // header line
+		while (scanner.hasNextLine())
+		{
+			String line = scanner.nextLine();
+			if (line == null || "".equals(line))
+				continue;
+
+			result.put(line.toLowerCase(), line);
 		}
 		scanner.close();
 
