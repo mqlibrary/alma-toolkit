@@ -3,6 +3,7 @@ package org.sample.patron.demo;
 import java.util.Properties;
 
 import org.sample.patron.demo.tasks.Task;
+import org.sample.patron.demo.tasks.TaskFixUserIdentifiers;
 import org.sample.patron.demo.tasks.TaskListUsers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,10 @@ public class TaskManager
 					case "listusers":
 						task = new TaskListUsers(args, config);
 						log.debug("created task: listusers");
+						break;
+					case "fixusers":
+						task = new TaskFixUserIdentifiers(args, config);
+						log.debug("created task: fixusers");
 						break;
 				}
 
