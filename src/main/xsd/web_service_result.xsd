@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+  targetNamespace="http://com/exlibris/urm/general/xmlbeans"
+  xmlns="http://com/exlibris/urm/general/xmlbeans"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="web_service_result">
+      <xs:complexType>
+     	<xs:sequence>
+  			<xs:element name="errorsExist" type="xs:boolean" />
+		   	<xs:element name="errorList" minOccurs="0" maxOccurs="1" type="errorList" />
+			<xs:element minOccurs="0" maxOccurs="1" name="result"  type="xs:anyType"/>
+		</xs:sequence>
+  	 </xs:complexType>
+  </xs:element>
+
+  <xs:complexType  name="errorList" >
+      <xs:sequence>
+        <xs:element name="error" type="error" minOccurs="0" maxOccurs="unbounded" />
+       </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="error">
+ 	<xs:all>
+ 		<xs:element minOccurs="1" name="errorCode" type="xs:string" />
+		<xs:element minOccurs="1" name="errorMessage" type="xs:string" />
+	</xs:all>
+  </xs:complexType>
+
+</xs:schema>
