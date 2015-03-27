@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -16,10 +18,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
 
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.sample.patron.demo.entity.ObjectFactory;
+import org.sample.patron.demo.entity.Error;
 import org.sample.patron.demo.entity.User;
 import org.sample.patron.demo.entity.UserIdentifier;
 import org.sample.patron.demo.entity.UserIdentifier.IdType;
+import org.sample.patron.demo.entity.WebServiceResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,65 +138,106 @@ public class TaskFixUserIdentifiers implements Task
 
 		for (String oldPrimaryId : userList)
 		{
-			log.info("processing user: {}", oldPrimaryId);
-
-			String newPrimaryId = identifiers.get(oldPrimaryId.toLowerCase());
-			if (newPrimaryId == null)
+			try
 			{
-				log.warn("user partyId not found: {}", oldPrimaryId);
-				continue;
+				log.info("processing user: {}", oldPrimaryId);
+
+				String newPrimaryId = identifiers.get(oldPrimaryId.toLowerCase());
+				if (newPrimaryId == null)
+				{
+					log.warn("user partyId not found: {}", oldPrimaryId);
+					continue;
+				}
+
+				String oneId = cns.get(oldPrimaryId.toLowerCase());
+				if (oneId == null)
+					oneId = oldPrimaryId;
+
+				WebTarget t = target.path(oldPrimaryId);
+				User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
+				log.info("fetched user: {}", user.getPrimaryId());
+
+				// remove PARTY_ID, ONE_ID, INSTITUTION_ID
+				boolean hasPartyId = false;
+				List<UserIdentifier> idsToRemove = new ArrayList<UserIdentifier>(5);
+				for (UserIdentifier i : user.getUserIdentifiers().getUserIdentifier())
+				{
+					if ("PARTY_ID".equals(i.getIdType().getValue()))
+					{
+						hasPartyId = true;
+						idsToRemove.add(i);
+					}
+
+					if ("ONE_ID".equals(i.getIdType().getValue()))
+						idsToRemove.add(i);
+
+					if ("INST_ID".equals(i.getIdType().getValue()))
+						idsToRemove.add(i);
+
+					// log.info("identifiers [{}]: {}", i.getIdType().getValue(), i.getValue());
+				}
+
+				for (UserIdentifier i : idsToRemove)
+					user.getUserIdentifiers().getUserIdentifier().remove(i);
+
+				JAXBElement<User> jaxbUser = null;
+
+				// save with oldPrimaryId to eliminate PartyId
+				if (hasPartyId)
+				{
+					jaxbUser = of.createUser(user);
+					user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+					log.info("updated user - removed PartyID: {}", user.getPrimaryId());
+				}
+
+				// add new primaryId, oneId
+				IdType idType = of.createUserIdentifierIdType();
+				idType.setValue("ONE_ID");
+				idType.setDesc("ONE_ID");
+
+				UserIdentifier userIdentifier = of.createUserIdentifier();
+				userIdentifier.setIdType(idType);
+				userIdentifier.setStatus("ACTIVE");
+				userIdentifier.setValue(oneId);
+
+				user.getUserIdentifiers().getUserIdentifier().add(userIdentifier);
+				user.setPrimaryId(newPrimaryId);
+
+				// save with oldPrimaryId
+				jaxbUser = of.createUser(user);
+				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+				log.info("updated user - changed PrimaryID: {} -> {}", oldPrimaryId, user.getPrimaryId());
 			}
-
-			String oneId = cns.get(oldPrimaryId.toLowerCase());
-			if (oneId == null)
-				oneId = oldPrimaryId;
-
-			WebTarget t = target.path(oldPrimaryId);
-			User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
-			log.info("fetched user: {}", user.getPrimaryId());
-
-			// remove PARTY_ID, ONE_ID, INSTITUTION_ID
-			List<UserIdentifier> idsToRemove = new ArrayList<UserIdentifier>(5);
-			for (UserIdentifier i : user.getUserIdentifiers().getUserIdentifier())
+			catch (ClientErrorException cee)
 			{
-				if ("PARTY_ID".equals(i.getIdType().getValue()))
-					idsToRemove.add(i);
-				if ("ONE_ID".equals(i.getIdType().getValue()))
-					idsToRemove.add(i);
-				if ("INST_ID".equals(i.getIdType().getValue()))
-					idsToRemove.add(i);
-
-				log.info("identifiers [{}]: {}", i.getIdType().getValue(), i.getValue());
+				try
+				{
+					WebServiceResult error = cee.getResponse().readEntity(WebServiceResult.class);
+					for (Error e : error.getErrorList().getError())
+					{
+						String mesg = e.getErrorMessage();
+						if (mesg != null)
+							mesg = mesg.replaceAll("\n", " ");
+					}
+				}
+				catch (MessageBodyProviderNotFoundException e)
+				{
+					String error = cee.getResponse().readEntity(String.class);
+					Object[] args = new Object[] { oldPrimaryId, error };
+					log.error("getPatron[{}] error: {}", args);
+				}
 			}
-
-			for (UserIdentifier i : idsToRemove)
-				user.getUserIdentifiers().getUserIdentifier().remove(i);
-
-			// save with oldPrimaryId
-			JAXBElement<User> jaxbUser = of.createUser(user);
-			user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
-			log.info("updated user: {}", user.getPrimaryId());
-
-			for (UserIdentifier i : user.getUserIdentifiers().getUserIdentifier())
-				log.info("identifiers [{}]: {}", i.getIdType().getValue(), i.getValue());
-
-			// add new primaryId, oneId
-			IdType idType = of.createUserIdentifierIdType();
-			idType.setValue("ONE_ID");
-			idType.setDesc("ONE_ID");
-
-			UserIdentifier userIdentifier = of.createUserIdentifier();
-			userIdentifier.setIdType(idType);
-			userIdentifier.setStatus("ACTIVE");
-			userIdentifier.setValue(oneId);
-
-			user.getUserIdentifiers().getUserIdentifier().add(userIdentifier);
-			user.setPrimaryId(newPrimaryId);
-
-			// save with oldPrimaryId
-			jaxbUser = of.createUser(user);
-			user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
-			log.info("updated user: {}", user.getPrimaryId());
+			catch (ServerErrorException see)
+			{
+				Object[] args = new Object[] { oldPrimaryId, see.getResponse().getStatusInfo().getStatusCode(),
+												see.getMessage() };
+				log.error("getPatron[{}] {}: {}", args);
+			}
+			catch (Exception e)
+			{
+				Object[] args = new Object[] { oldPrimaryId, e.getMessage(), e };
+				log.error("getPatron[{}]: {}", args);
+			}
 		}
 	}
 
