@@ -224,19 +224,19 @@ public class TaskFixUserIdentifiers implements Task
 				{
 					String error = cee.getResponse().readEntity(String.class);
 					Object[] args = new Object[] { oldPrimaryId, error };
-					log.error("getPatron[{}] error: {}", args);
+					log.error("TaskFixUserIdentifiers[{}] error: {}", args);
 				}
 			}
 			catch (ServerErrorException see)
 			{
 				Object[] args = new Object[] { oldPrimaryId, see.getResponse().getStatusInfo().getStatusCode(),
 												see.getMessage() };
-				log.error("getPatron[{}] {}: {}", args);
+				log.error("TaskFixUserIdentifiers[{}] {}: {}", args);
 			}
 			catch (Exception e)
 			{
 				Object[] args = new Object[] { oldPrimaryId, e.getMessage(), e };
-				log.error("getPatron[{}]: {}", args);
+				log.error("TaskFixUserIdentifiers[{}]: {}", args);
 			}
 		}
 	}
