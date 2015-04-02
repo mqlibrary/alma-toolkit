@@ -133,6 +133,9 @@ public class TaskSetUserPurgeDates implements Task
 			return;
 		}
 
+		log.info("expiry date: {}", expiryDate);
+		log.info("purge date:  {}", purgeDate);
+
 		try
 		{
 			File userListFile = new File(userListFilename);
@@ -156,7 +159,6 @@ public class TaskSetUserPurgeDates implements Task
 			try
 			{
 				log.info("processing user: {}", primaryId);
-				log.info("dates: {}/{}", expiryDate, purgeDate);
 
 				WebTarget t = target.path(primaryId);
 				User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
