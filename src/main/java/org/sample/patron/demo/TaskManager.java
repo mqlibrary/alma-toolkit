@@ -5,6 +5,7 @@ import java.util.Properties;
 import org.sample.patron.demo.tasks.Task;
 import org.sample.patron.demo.tasks.TaskFixUserIdentifiers;
 import org.sample.patron.demo.tasks.TaskListUsers;
+import org.sample.patron.demo.tasks.TaskSetUserPurgeDates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,10 @@ public class TaskManager
 					case "fixusers":
 						task = new TaskFixUserIdentifiers(args, config);
 						log.debug("created task: fixusers");
+						break;
+					case "setuserpurgedates":
+						task = new TaskSetUserPurgeDates(args, config);
+						log.debug("created task: setuserpurgedates");
 						break;
 				}
 
