@@ -210,8 +210,8 @@ public class TaskSetUserPurgeDates implements Task
 	{
 		Map<String, String> options = new HashMap<String, String>();
 
-		options.put("-expiryDate YYYY-MM-DD", "expiry date");
-		options.put("-purgeDate YYYY-MM-DD", "purge date");
+		options.put("-expiry YYYY-MM-DD", "expiry date");
+		options.put("-purge YYYY-MM-DD", "purge date");
 		options.put("-users filename", "list of user identifiers to process");
 
 		return options;
