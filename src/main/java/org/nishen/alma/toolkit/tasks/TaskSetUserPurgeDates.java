@@ -1,4 +1,4 @@
-package org.sample.patron.demo.tasks;
+package org.nishen.alma.toolkit.tasks;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,10 +26,10 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
-import org.sample.patron.demo.entity.Error;
-import org.sample.patron.demo.entity.ObjectFactory;
-import org.sample.patron.demo.entity.User;
-import org.sample.patron.demo.entity.WebServiceResult;
+import org.nishen.alma.toolkit.entity.user.ObjectFactory;
+import org.nishen.alma.toolkit.entity.user.User;
+import org.nishen.alma.toolkit.entity.ws.Error;
+import org.nishen.alma.toolkit.entity.ws.WebServiceResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
