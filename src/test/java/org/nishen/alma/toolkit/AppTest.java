@@ -1,4 +1,4 @@
-package org.sample.patron.demo;
+package org.nishen.alma.toolkit;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
