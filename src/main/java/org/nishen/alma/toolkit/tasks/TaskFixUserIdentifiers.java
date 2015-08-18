@@ -186,7 +186,8 @@ public class TaskFixUserIdentifiers implements Task
 				if (hasPartyId)
 				{
 					jaxbUser = of.createUser(user);
-					user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+					user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML),
+					                                                User.class);
 					log.info("updated user - removed PartyID: {}", user.getPrimaryId());
 				}
 
@@ -205,7 +206,8 @@ public class TaskFixUserIdentifiers implements Task
 
 				// save with oldPrimaryId
 				jaxbUser = of.createUser(user);
-				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML),
+				                                                User.class);
 				log.info("updated user - changed PrimaryID: {} -> {}", oldPrimaryId, user.getPrimaryId());
 			}
 			catch (ClientErrorException cee)
@@ -230,7 +232,7 @@ public class TaskFixUserIdentifiers implements Task
 			catch (ServerErrorException see)
 			{
 				Object[] args = new Object[] { oldPrimaryId, see.getResponse().getStatusInfo().getStatusCode(),
-												see.getMessage() };
+				                               see.getMessage() };
 				log.error("TaskFixUserIdentifiers[{}] {}: {}", args);
 			}
 			catch (Exception e)

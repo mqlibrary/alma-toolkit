@@ -168,7 +168,8 @@ public class TaskSetUserPurgeDates implements Task
 				user.setPurgeDate(makeDate(purgeDate));
 
 				JAXBElement<User> jaxbUser = of.createUser(user);
-				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML), User.class);
+				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML),
+				                                                User.class);
 
 				log.info("updated user [{}] - {}/{}", user.getPrimaryId(), user.getExpiryDate(), user.getPurgeDate());
 			}
@@ -194,7 +195,7 @@ public class TaskSetUserPurgeDates implements Task
 			catch (ServerErrorException see)
 			{
 				Object[] args = new Object[] { primaryId, see.getResponse().getStatusInfo().getStatusCode(),
-												see.getMessage() };
+				                               see.getMessage() };
 				log.error("TaskFixUserIdentifiers[{}] {}: {}", args);
 			}
 			catch (Exception e)
