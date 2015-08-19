@@ -11,7 +11,7 @@
 		</encoder>
 	</appender>
 
-	<logger name="org.sample" level="TRACE" additivity="false">
+	<logger name="org.nishen.alma.toolkit" level="TRACE" additivity="false">
 		<appender-ref ref="STDOUT" />
 	</logger>
 
