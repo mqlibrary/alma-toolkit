@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
@@ -13,6 +11,10 @@ import org.nishen.alma.toolkit.entity.user.User;
 import org.nishen.alma.toolkit.entity.user.Users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 
 /**
  * A sample task using the Alma API. This is a simple task that gets a list of
@@ -28,25 +30,23 @@ public class TaskListUsers implements Task
 {
 	private static final Logger log = LoggerFactory.getLogger(TaskListUsers.class);
 
-	private Properties config = null;
+	private Provider<WebTarget> webTargetProvider;
 
 	private String limit = "100";
+
 	private String offset = "0";
 
-	// Disable the default empty constructor. We just want to use the
-	// parameterized one.
-	@SuppressWarnings("unused")
-	private TaskListUsers()
-	{}
+	private static final String TASKNAME = "listUsers";
 
-	/**
-	 * @param args command line args passed in.
-	 * @param config the properties loaded in at run time.
-	 */
-	public TaskListUsers(String[] args, Properties config)
+	public static String getTaskName()
 	{
-		this.config = config;
+		return TASKNAME;
+	}
 
+	@Inject
+	private TaskListUsers(@Named("app.cmdline") final String[] args, @Named("app.config") final Properties config,
+	                      @Named("ws.url.alma") Provider<WebTarget> webTargetProvider)
+	{
 		// extract relevant command line arguments
 		if (args != null && args.length > 0)
 			for (int x = 0; x < args.length; x++)
@@ -62,6 +62,8 @@ public class TaskListUsers implements Task
 						offset = args[++x];
 				}
 			}
+
+		this.webTargetProvider = webTargetProvider;
 
 		log.debug("initialised tasklistusers");
 	}
@@ -83,25 +85,16 @@ public class TaskListUsers implements Task
 			return;
 		}
 
-		// this is the URL to the Alma API endpoint
-		String url = config.getProperty("ws.url.alma");
-
-		// this is the apikey we will be using
-		String key = config.getProperty("ws.url.alma.key");
-
-		// instantiate a REST client.
-		Client client = ClientBuilder.newClient();
-
 		// instantiate an endpoint - this is the base of the URL:
 		// https://gateway-hostname/almaws/version/
 		// or: https://api-ap.hosted.exlibrisgroup.com/almaws/v1
-		WebTarget target = client.target(url);
+		WebTarget target = webTargetProvider.get();
 
 		// the 'path' specifies the resource we are targeting e.g. 'users'.
 		// this will result in: https://api-ap.hosted.exlibrisgroup.com/almaws/v1/users
-		// we are also specifying some parameters: apikey, limit and offset
+		// we are also specifying some parameters: limit and offset (apikey preconfigured)
 		// this results in: https://api-ap.hosted.exlibrisgroup.com/almaws/v1/users?apikey=xxx&limit=100&offset=0
-		target = target.path("users").queryParam("apikey", key).queryParam("limit", limit).queryParam("offset", offset);
+		target = target.path("users").queryParam("limit", limit).queryParam("offset", offset);
 
 		// we avoid dealing with any XML/JSON. We just make the call.
 		Users users = target.request(MediaType.APPLICATION_XML_TYPE).get(Users.class);

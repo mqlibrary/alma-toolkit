@@ -11,8 +11,6 @@ import java.util.Scanner;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ServerErrorException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -28,6 +26,10 @@ import org.nishen.alma.toolkit.entity.ws.WebServiceResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+
 /**
  * Task to correct the Identifiers of a User record.
  * 
@@ -37,8 +39,6 @@ public class TaskFixUserIdentifiers implements Task
 {
 	private static final Logger log = LoggerFactory.getLogger(TaskFixUserIdentifiers.class);
 
-	private Properties config = null;
-
 	private String userListFilename = null;
 
 	private String identifiersFilename = null;
@@ -47,20 +47,20 @@ public class TaskFixUserIdentifiers implements Task
 
 	private ObjectFactory of = new ObjectFactory();
 
-	// Disable the default empty constructor. We just want to use the
-	// parameterized one.
-	@SuppressWarnings("unused")
-	private TaskFixUserIdentifiers()
-	{}
+	private Provider<WebTarget> webTargetProvider;
 
-	/**
-	 * @param args command line args passed in.
-	 * @param config the properties loaded in at run time.
-	 */
-	public TaskFixUserIdentifiers(String[] args, Properties config)
+	private static final String TASKNAME = "fixUserIdentifiers";
+
+	public static String getTaskName()
 	{
-		this.config = config;
+		return TASKNAME;
+	}
 
+	@Inject
+	private TaskFixUserIdentifiers(@Named("app.cmdline") final String[] args,
+	                               @Named("app.config") final Properties config,
+	                               @Named("ws.url.alma") Provider<WebTarget> webTargetProvider)
+	{
 		// extract relevant command line arguments
 		if (args != null && args.length > 0)
 			for (int x = 0; x < args.length; x++)
@@ -81,6 +81,8 @@ public class TaskFixUserIdentifiers implements Task
 						cnFilename = args[++x];
 				}
 			}
+
+		this.webTargetProvider = webTargetProvider;
 
 		log.debug("initialised {}", this.getClass().getCanonicalName());
 	}
@@ -129,12 +131,7 @@ public class TaskFixUserIdentifiers implements Task
 			return;
 		}
 
-		String url = config.getProperty("ws.url.alma");
-		String key = config.getProperty("ws.url.alma.key");
-
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target(url);
-		target = target.path("users").queryParam("apikey", key);
+		WebTarget target = webTargetProvider.get();
 
 		for (String oldPrimaryId : userList)
 		{

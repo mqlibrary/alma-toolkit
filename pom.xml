@@ -98,7 +98,7 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>org.nishen.alma.toolkit.App</mainClass>
+									<mainClass>org.nishen.alma.toolkit.ToolkitLauncher</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
@@ -169,6 +169,35 @@
 							<schemaDirectory>${basedir}/src/main</schemaDirectory>
 							<schemaIncludes>
 								<include>xsd/web_service_result.xsd</include>
+							</schemaIncludes>
+							<plugins>
+								<plugin>
+									<groupId>org.jvnet.jaxb2_commons</groupId>
+									<artifactId>jaxb2-basics</artifactId>
+									<version>0.9.3</version>
+								</plugin>
+							</plugins>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-report</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<extension>true</extension>
+							<episode>false</episode>
+							<generatePackage>org.nishen.alma.toolkit.entity.report</generatePackage>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc3</generateDirectory>
+							<args>
+								<arg>-XtoString</arg>
+								<arg>-Xequals</arg>
+								<arg>-XhashCode</arg>
+							</args>
+							<schemaDirectory>${basedir}/src/main</schemaDirectory>
+							<schemaIncludes>
+								<include>xsd/rest_analyt_report.xsd</include>
 							</schemaIncludes>
 							<plugins>
 								<plugin>
