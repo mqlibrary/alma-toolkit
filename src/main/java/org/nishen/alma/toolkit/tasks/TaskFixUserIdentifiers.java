@@ -39,6 +39,8 @@ public class TaskFixUserIdentifiers implements Task
 {
 	private static final Logger log = LoggerFactory.getLogger(TaskFixUserIdentifiers.class);
 
+	private static final String TASKNAME = "fixUserIdentifiers";
+
 	private String userListFilename = null;
 
 	private String identifiersFilename = null;
@@ -48,13 +50,6 @@ public class TaskFixUserIdentifiers implements Task
 	private ObjectFactory of = new ObjectFactory();
 
 	private Provider<WebTarget> webTargetProvider;
-
-	private static final String TASKNAME = "fixUserIdentifiers";
-
-	public static String getTaskName()
-	{
-		return TASKNAME;
-	}
 
 	@Inject
 	private TaskFixUserIdentifiers(@Named("app.cmdline") final String[] args,
@@ -318,5 +313,10 @@ public class TaskFixUserIdentifiers implements Task
 		scanner.close();
 
 		return result;
+	}
+
+	public static String getTaskName()
+	{
+		return TASKNAME;
 	}
 }

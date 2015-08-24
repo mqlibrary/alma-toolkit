@@ -12,6 +12,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
 import org.nishen.alma.toolkit.tasks.Task;
+import org.nishen.alma.toolkit.util.AlmaAuthHeaderFilter;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ public class ToolkitModule extends AbstractModule
 {
 	private static final Logger log = LoggerFactory.getLogger(ToolkitModule.class);
 
-	private static final String CONFIG_FILE = "config.properties";
+	private static final String CONFIG_FILE = "app.properties";
 
 	private static final String DEFAULT_PACKAGE = "org.nishen.alma.toolkit.tasks";
 
@@ -68,11 +69,9 @@ public class ToolkitModule extends AbstractModule
 			return;
 		}
 
-		// bind command line arguments
+		// bind instances
 		TypeLiteral<String[]> argsType = new TypeLiteral<String[]>() {};
 		bind(argsType).annotatedWith(Names.named("app.cmdline")).toInstance(args);
-
-		// bind config
 		bind(Properties.class).annotatedWith(Names.named("app.config")).toInstance(config);
 
 		// bind task classes
@@ -106,11 +105,11 @@ public class ToolkitModule extends AbstractModule
 	@Named("ws.url.alma")
 	protected WebTarget provideWebTargetAlma()
 	{
-		Client client = ClientBuilder.newClient();
 		if (almaTarget == null)
 		{
+			Client client = ClientBuilder.newClient();
+			client.register(new AlmaAuthHeaderFilter(config.getProperty("ws.url.alma.key")));
 			almaTarget = client.target(config.getProperty("ws.url.alma"));
-			almaTarget = almaTarget.queryParam("apikey", config.getProperty("ws.url.alma.key"));
 		}
 
 		return almaTarget;
