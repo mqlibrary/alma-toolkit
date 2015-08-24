@@ -30,18 +30,13 @@ public class TaskListUsers implements Task
 {
 	private static final Logger log = LoggerFactory.getLogger(TaskListUsers.class);
 
+	private static final String TASKNAME = "listUsers";
+
 	private Provider<WebTarget> webTargetProvider;
 
 	private String limit = "100";
 
 	private String offset = "0";
-
-	private static final String TASKNAME = "listUsers";
-
-	public static String getTaskName()
-	{
-		return TASKNAME;
-	}
 
 	@Inject
 	private TaskListUsers(@Named("app.cmdline") final String[] args, @Named("app.config") final Properties config,
@@ -81,7 +76,7 @@ public class TaskListUsers implements Task
 		}
 		catch (NumberFormatException nfe)
 		{
-			log.error("option specified is not an integer: {}", limit, nfe);
+			log.error("option specified is not an integer: {}", nfe.getMessage(), nfe);
 			return;
 		}
 
@@ -120,5 +115,10 @@ public class TaskListUsers implements Task
 		options.put("-offset x", "starting index of results to return");
 
 		return options;
+	}
+
+	public static String getTaskName()
+	{
+		return TASKNAME;
 	}
 }

@@ -44,6 +44,8 @@ public class TaskSetUserPurgeDates implements Task
 {
 	private static final Logger log = LoggerFactory.getLogger(TaskSetUserPurgeDates.class);
 
+	private static final String TASKNAME = "setUserPurgeDates";
+
 	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
 	private Provider<WebTarget> webTargetProvider;
@@ -55,13 +57,6 @@ public class TaskSetUserPurgeDates implements Task
 	private Date purgeDate = null;
 
 	private ObjectFactory of = new ObjectFactory();
-
-	private static final String TASKNAME = "setUserPurgeDates";
-
-	public static String getTaskName()
-	{
-		return TASKNAME;
-	}
 
 	/**
 	 * @param args command line args passed in.
@@ -268,5 +263,10 @@ public class TaskSetUserPurgeDates implements Task
 		log.trace("makeDate [xml gregorian]: {}", c.toString());
 
 		return c;
+	}
+
+	public static String getTaskName()
+	{
+		return TASKNAME;
 	}
 }
