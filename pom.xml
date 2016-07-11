@@ -5,7 +5,7 @@
 
 	<groupId>org.nishen.alma</groupId>
 	<artifactId>alma-toolkit</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>alma-toolkit</name>
@@ -40,6 +40,11 @@
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-assistedinject</artifactId>
 			<version>3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.htmlunit</groupId>
+			<artifactId>htmlunit</artifactId>
+			<version>2.22</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
@@ -203,6 +208,37 @@
 							<schemaDirectory>${basedir}/src/main</schemaDirectory>
 							<schemaIncludes>
 								<include>xsd/rest_analytics_report_expanded.xsd</include>
+							</schemaIncludes>
+							<plugins>
+								<plugin>
+									<groupId>org.jvnet.jaxb2_commons</groupId>
+									<artifactId>jaxb2-basics</artifactId>
+									<version>0.9.3</version>
+								</plugin>
+							</plugins>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-partner</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<extension>true</extension>
+							<episode>false</episode>
+							<generatePackage>org.nishen.alma.toolkit.entity.partners</generatePackage>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc4</generateDirectory>
+							<args>
+								<arg>-XtoString</arg>
+								<arg>-Xequals</arg>
+								<arg>-XhashCode</arg>
+							</args>
+							<schemaDirectory>${basedir}/src/main</schemaDirectory>
+							<schemaIncludes>
+								<include>xsd/rest_notes.xsd</include>
+								<include>xsd/rest_partner.xsd</include>
+								<include>xsd/rest_partners.xsd</include>
 							</schemaIncludes>
 							<plugins>
 								<plugin>

@@ -17,6 +17,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gargoylesoftware.htmlunit.WebClient;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -113,5 +114,18 @@ public class ToolkitModule extends AbstractModule
 		}
 
 		return almaTarget;
+	}
+
+	@Provides
+	protected WebClient provideWebClient()
+	{
+		WebClient webClient = new WebClient();
+
+		webClient.getOptions().setActiveXNative(false);
+		webClient.getOptions().setJavaScriptEnabled(false);
+		webClient.getOptions().setCssEnabled(false);
+		webClient.getOptions().setUseInsecureSSL(true);
+
+		return webClient;
 	}
 }

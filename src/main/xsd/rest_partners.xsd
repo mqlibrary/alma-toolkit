@@ -1,0 +1,31 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xs:annotation>
+		<xs:documentation>Resource Sharing Partners represent the systems that Alma communicates in order to supply Resource Sharing services.
+		A partner can be defined as one of the supported communication profiles: NCIP, ART_EMAIL, ISO or  EMAIL.</xs:documentation>
+	</xs:annotation>
+
+	<xs:include schemaLocation="rest_partner.xsd" />
+
+	<xs:element name="partners" type="partners" />
+
+	<xs:complexType name="partners">
+		<xs:annotation>
+			<xs:documentation>A list of Resource Sharing Partners.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="partner" type="partner">
+				<xs:annotation>
+					<xs:documentation>Resource Sharing Partner object.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+
+		<xs:attribute name="total_record_count" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>The total number of Resource Sharing Partners. This can be used when retrieving the partners list using pagination.</xs:documentation>
+				</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+</xs:schema>

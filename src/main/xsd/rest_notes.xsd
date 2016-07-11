@@ -1,0 +1,51 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xs:annotation>
+		<xs:documentation>Information about a list of Notes in Alma.</xs:documentation>
+	</xs:annotation>
+
+	<xs:complexType name="notes">
+		<xs:annotation>
+			<xs:appinfo>
+				<xs:tags>api get post put</xs:tags>
+			</xs:appinfo>
+			<xs:documentation>List of related notes. In the PUT action the incoming list will replace the existing list.
+			If the incoming list is empty, the existing list will be deleted.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="note" type="note" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Specific related note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="note">
+		<xs:annotation>
+			<xs:appinfo>
+				<xs:tags>api get post put</xs:tags>
+			</xs:appinfo>
+			<xs:documentation>Specific related note.</xs:documentation>
+		</xs:annotation>
+		<xs:all>
+			<xs:element name="content" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The note's text. Mandatory.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="creation_date" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The creation date of the note. Default is the current date.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="created_by" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The creator of the note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+</xs:schema>
