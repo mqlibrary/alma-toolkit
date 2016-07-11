@@ -3,6 +3,8 @@ package org.nishen.alma.toolkit.tasks;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +120,11 @@ public class TaskFetchReport implements Task
 		String path = title;
 		// path = "/users/1024839030002171_2171_d/User Analysis/Loan Data";
 
-		target = target.path("analytics/reports").queryParam("limit", limit).queryParam("path", path);
+		String filter = getFilter(new Date(), new Date());
+		log.debug("filter:\n{}", filter);
+
+		target = target.path("analytics/reports").queryParam("limit", limit).queryParam("path", path)
+		               .queryParam("filter", filter);
 
 		try (CSVPrinter printer = new CSVPrinter(new FileWriter(csv), CSVFormat.EXCEL);)
 		{
@@ -176,6 +182,35 @@ public class TaskFetchReport implements Task
 		{
 			log.error("unable to write records to csv file: {}", csv, ioe);
 		}
+	}
+
+	private String getFilter(Date ds, Date de)
+	{
+		StringBuilder result = new StringBuilder();
+		StringBuilder filter = new StringBuilder();
+		filter.append("<sawx:expr ");
+		filter.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ");
+		filter.append("xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" ");
+		filter.append("xmlns:saw=\"com.siebel.analytics.web/report/v1.1\" ");
+		filter.append("xmlns:sawx=\"com.siebel.analytics.web/expression/v1.1\" ");
+		filter.append("xsi:type=\"sawx:logical\" op=\"and\">");
+		filter.append("<sawx:expr xsi:type=\"sawx:comparison\" op=\"greaterOrEqual\">");
+		filter.append("<sawx:expr xsi:type=\"sawx:sqlExpression\">\"Loan Date\".\"Loan Date\"</sawx:expr>");
+		// filter.append("<sawx:expr xsi:type=\"xsd:date\">%1$tY-%1$tm-%1$td</sawx:expr>");
+		filter.append("<sawx:expr xsi:type=\"xsd:date\">2016-05-01</sawx:expr>");
+		filter.append("</sawx:expr>");
+		filter.append("<sawx:expr xsi:type=\"sawx:comparison\" op=\"less\">");
+		filter.append("<sawx:expr xsi:type=\"sawx:sqlExpression\">\"Loan Date\".\"Loan Date\"</sawx:expr>");
+		// filter.append("<sawx:expr xsi:type=\"xsd:date\">%2$tY-%2$tm-%2$td</sawx:expr>");
+		filter.append("<sawx:expr xsi:type=\"xsd:date\">2016-06-01</sawx:expr>");
+		filter.append("</sawx:expr>");
+		filter.append("</sawx:expr>");
+
+		Formatter fmt = new Formatter(result);
+		fmt.format(filter.toString(), ds, de);
+		fmt.close();
+
+		return result.toString();
 	}
 
 	@Override
