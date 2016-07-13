@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -115,6 +114,8 @@ public class TaskUpdateResourcePartners implements Task
 	{
 		Map<String, Partner> result = new HashMap<String, Partner>();
 
+		String institutionCode = config.getProperty("ladd.institution.code");
+
 		WebClient webClient = webClientProvider.get();
 		HtmlPage page = null;
 		try
@@ -130,9 +131,13 @@ public class TaskUpdateResourcePartners implements Task
 		HtmlTable table = (HtmlTable) page.getElementById("suspension");
 		for (HtmlTableRow row : table.getRows())
 		{
-			log.debug("row:");
-			for (HtmlTableCell cell : row.getCells())
-				log.debug("\t{}", cell.asText());
+			String nuc = row.getCell(0).asText();
+
+			if ("NUC symbol".equals(nuc) || institutionCode.equals(nuc))
+			{
+				log.debug("skipping nuc: {}", nuc);
+				continue;
+			}
 
 			ResourcePartner library = new ResourcePartner();
 			library.setNuc(row.getCell(0).asText());
@@ -162,9 +167,6 @@ public class TaskUpdateResourcePartners implements Task
 			result.put(p.getPartnerDetails().getCode(), p);
 		}
 
-		// remove header row
-		result.remove(0);
-
 		return result;
 	}
 
@@ -174,7 +176,7 @@ public class TaskUpdateResourcePartners implements Task
 
 		WebTarget target = webTargetProviderAlma.get().path("partners");
 
-		long limit = 1000;
+		long limit = 100;
 		long offset = 0;
 		long total = -1;
 		long count = 0;
@@ -191,6 +193,8 @@ public class TaskUpdateResourcePartners implements Task
 
 			for (Partner p : result.getPartner())
 				partnerMap.put(p.getPartnerDetails().getCode(), p);
+
+			log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
 		}
 		while (count < total);
 
@@ -308,9 +312,6 @@ public class TaskUpdateResourcePartners implements Task
 	public Map<String, String> getUsageOptions()
 	{
 		Map<String, String> options = new HashMap<String, String>();
-
-		options.put("-limit x", "limit the number of results to return");
-		options.put("-offset x", "starting index of results to return");
 
 		return options;
 	}
