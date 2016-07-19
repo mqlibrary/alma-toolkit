@@ -21,6 +21,8 @@ public class TestUpdateResourcePartners
 {
 	private static final Logger log = LoggerFactory.getLogger(TestUpdateResourcePartners.class);
 
+	private static Map<String, Partner> almaPartners = null;
+
 	private static TaskUpdateResourcePartners task = null;
 
 	@BeforeClass
@@ -34,6 +36,7 @@ public class TestUpdateResourcePartners
 		try
 		{
 			task = injector.getInstance(TaskUpdateResourcePartners.class);
+			almaPartners = task.getAlmaPartners();
 		}
 		catch (Exception e)
 		{
@@ -42,11 +45,29 @@ public class TestUpdateResourcePartners
 	}
 
 	@Test
-	public void TestCheckPartnerCompare()
+	public void TestGetAlmaPartner()
 	{
 		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
 
-		Map<String, Partner> almaPartners = task.getAlmaPartners();
+		Partner partner = task.getAlmaPartner("ATU");
+
+		Assert.assertNotNull(partner);
+	}
+
+	@Test
+	public void TestGetLaddPartners()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
+
+		Map<String, Partner> tepunaPartners = task.getLaddPartners();
+
+		Assert.assertTrue(tepunaPartners != null && tepunaPartners.size() > 10);
+	}
+
+	@Test
+	public void TestCheckLaddPartnerCompare()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
 
 		Map<String, Partner> laddPartners = task.getLaddPartners();
 
@@ -57,5 +78,46 @@ public class TestUpdateResourcePartners
 		log.debug("{}", lp);
 
 		Assert.assertTrue(task.isEqual(ap, lp));
+	}
+
+	@Test
+	public void TestCheckTepunaPartnerCompare()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
+
+		Map<String, Partner> tepunaPartners = task.getTepunaPartners();
+
+		Partner ap = almaPartners.get("WLT");
+		log.debug("{}", ap);
+
+		Partner tp = tepunaPartners.get("WLT");
+		log.debug("{}", tp);
+
+		Assert.assertTrue(task.isEqual(ap, tp));
+	}
+
+	@Test
+	public void TestGetTepunaPartners()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
+
+		Map<String, Partner> tepunaPartners = task.getTepunaPartners();
+
+		Assert.assertTrue(tepunaPartners != null && tepunaPartners.size() > 10);
+	}
+
+	@Test
+	public void TestGetTepunaAddress()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
+
+		Map<String, Partner> tepunaPartners = task.getTepunaPartners();
+
+		Assert.assertTrue(tepunaPartners != null && tepunaPartners.size() > 10);
+
+		Partner p = tepunaPartners.get("ATU");
+		Assert.assertEquals("Auckland University of Technology Library", p.getPartnerDetails().getName());
+		Assert.assertEquals("+64 9 921 9999 x 8662", p.getContactInfo().getPhones().getPhone().get(0).getPhoneNumber());
+		Assert.assertEquals("Private Bag 92006", p.getContactInfo().getAddresses().getAddress().get(0).getLine1());
 	}
 }
