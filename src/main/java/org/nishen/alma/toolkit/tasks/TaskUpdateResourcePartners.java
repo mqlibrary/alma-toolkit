@@ -130,9 +130,15 @@ public class TaskUpdateResourcePartners implements Task
 				Partner ap = almaPartners.get(s);
 
 				if (ap == null)
+				{
+					log.debug("starting thread for create partner: {}", p.getPartnerDetails().getCode());
 					executor.execute(new UpdatePartnerTask(t, p, false));
+				}
 				else if (!isEqual(p, ap))
+				{
+					log.debug("starting thread for update partner: {}", p.getPartnerDetails().getCode());
 					executor.execute(new UpdatePartnerTask(t, p, true));
+				}
 			}
 
 			executor.shutdown();
@@ -172,23 +178,24 @@ public class TaskUpdateResourcePartners implements Task
 		{
 			ExecutorService executor = Executors.newFixedThreadPool(6);
 
+			log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
 			Future<Partners> initial = executor.submit(new FetchResourcePartners(target, offset));
 			Partners partners = initial.get();
 			total = partners.getTotalRecordCount();
 			offset += PARTNERS_LIMIT;
 			count += partners.getPartner().size();
+
 			for (Partner p : partners.getPartner())
 				partnerMap.put(p.getPartnerDetails().getCode(), p);
 
 			List<Future<Partners>> partial = new ArrayList<Future<Partners>>();
 			while (count < total)
 			{
+				log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
 				partial.add(executor.submit(new FetchResourcePartners(target, offset)));
 
 				offset += PARTNERS_LIMIT;
 				count += partners.getPartner().size();
-
-				log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
 			}
 
 			for (Future<Partners> future : partial)
@@ -198,7 +205,6 @@ public class TaskUpdateResourcePartners implements Task
 					partnerMap.put(p.getPartnerDetails().getCode(), p);
 			}
 
-			executor.awaitTermination(10L, TimeUnit.MINUTES);
 			executor.shutdown();
 		}
 		catch (ExecutionException ee)
