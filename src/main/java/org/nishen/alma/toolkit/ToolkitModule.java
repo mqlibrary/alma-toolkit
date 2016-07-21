@@ -17,6 +17,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gargoylesoftware.htmlunit.ProxyConfig;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -120,6 +121,14 @@ public class ToolkitModule extends AbstractModule
 	protected WebClient provideWebClient()
 	{
 		WebClient webClient = new WebClient();
+
+		String proxyHost = config.getProperty("ws.proxy.host");
+		String proxyPort = config.getProperty("ws.proxy.port");
+		if (proxyHost != null && !"".equals(proxyHost) && proxyPort != null && !"".equals(proxyPort))
+		{
+			ProxyConfig proxyConfig = new ProxyConfig(proxyHost, Integer.parseInt(proxyPort));
+			webClient.getOptions().setProxyConfig(proxyConfig);
+		}
 
 		webClient.getOptions().setActiveXNative(false);
 		webClient.getOptions().setJavaScriptEnabled(false);
