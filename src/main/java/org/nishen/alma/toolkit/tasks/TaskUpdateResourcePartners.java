@@ -197,6 +197,9 @@ public class TaskUpdateResourcePartners implements Task
 				for (Partner p : partners.getPartner())
 					partnerMap.put(p.getPartnerDetails().getCode(), p);
 			}
+
+			executor.awaitTermination(10L, TimeUnit.MINUTES);
+			executor.shutdown();
 		}
 		catch (ExecutionException ee)
 		{
@@ -325,6 +328,7 @@ public class TaskUpdateResourcePartners implements Task
 		TextPage page = null;
 		try
 		{
+			log.debug("tepuna url: {}", tepunaUrl);
 			page = webClient.getPage(tepunaUrl);
 		}
 		catch (IOException e)
