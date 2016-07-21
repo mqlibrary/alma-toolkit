@@ -635,6 +635,10 @@ public class TaskUpdateResourcePartners implements Task
 		{
 			String m = MediaType.APPLICATION_XML;
 
+			String action = replace ? "Updating" : "Creating";
+			log.info("{} partner[{}]: {}", action, partner.getPartnerDetails().getCode(),
+			         partner.getPartnerDetails().getName());
+
 			Partner result = null;
 
 			JAXBElement<Partner> p = of.createPartner(partner);
