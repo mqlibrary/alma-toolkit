@@ -8,6 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -68,6 +76,8 @@ public class TaskUpdateResourcePartners implements Task
 
 	private static final String TASKNAME = "updateResourcePartners";
 
+	private static final int PARTNERS_LIMIT = 100;
+
 	private static final ObjectFactory of = new ObjectFactory();
 
 	private Properties config;
@@ -104,24 +114,39 @@ public class TaskUpdateResourcePartners implements Task
 	{
 		log.info("executing task: {}", this.getClass().getSimpleName());
 
-		Map<String, Partner> almaPartners = getAlmaPartners();
+		ConcurrentMap<String, Partner> almaPartners = getAlmaPartners();
 
-		Map<String, Partner> partners = getLaddPartners();
+		ConcurrentMap<String, Partner> partners = getLaddPartners();
 		partners.putAll(getTepunaPartners());
 
-		for (String s : partners.keySet())
+		try
 		{
-			Partner p = partners.get(s);
-			Partner ap = almaPartners.get(s);
+			WebTarget t = webTargetProviderAlma.get().path("partners");
+			ExecutorService executor = Executors.newFixedThreadPool(6);
 
-			if (ap == null)
+			for (String s : partners.keySet())
 			{
-				addPartner(p);
+				Partner p = partners.get(s);
+				Partner ap = almaPartners.get(s);
+
+				if (ap == null)
+					executor.execute(new UpdatePartnerTask(t, p, false));
+				else if (!isEqual(p, ap))
+					executor.execute(new UpdatePartnerTask(t, p, true));
 			}
-			else if (!isEqual(p, ap))
-			{
-				updatePartner(p);
-			}
+
+			executor.shutdown();
+			executor.awaitTermination(1L, TimeUnit.HOURS);
+		}
+		catch (InterruptedException ie)
+		{
+			log.error("executor awaiting termination was interrupted: {}", ie);
+			log.debug("{}", ie);
+		}
+		catch (Exception e)
+		{
+			log.error("execution failure: {}", e);
+			log.debug("{}", e);
 		}
 	}
 
@@ -133,42 +158,65 @@ public class TaskUpdateResourcePartners implements Task
 		return result;
 	}
 
-	public Map<String, Partner> getAlmaPartners()
+	public ConcurrentMap<String, Partner> getAlmaPartners()
 	{
-		Map<String, Partner> partnerMap = new HashMap<String, Partner>();
+		ConcurrentMap<String, Partner> partnerMap = new ConcurrentHashMap<String, Partner>();
 
-		WebTarget target = webTargetProviderAlma.get().path("partners");
-
-		long limit = 100;
 		long offset = 0;
 		long total = -1;
 		long count = 0;
 
-		do
+		WebTarget target = webTargetProviderAlma.get().path("partners");
+
+		try
 		{
-			WebTarget t = target.queryParam("limit", limit).queryParam("offset", offset);
-			Partners result = t.request(MediaType.APPLICATION_XML).get(Partners.class);
+			ExecutorService executor = Executors.newFixedThreadPool(6);
 
-			if (total < 0)
-				total = result.getTotalRecordCount();
-			count += result.getPartner().size();
-			offset += limit;
-
-			for (Partner p : result.getPartner())
+			Future<Partners> initial = executor.submit(new FetchResourcePartners(target, offset));
+			Partners partners = initial.get();
+			total = partners.getTotalRecordCount();
+			offset += PARTNERS_LIMIT;
+			count += partners.getPartner().size();
+			for (Partner p : partners.getPartner())
 				partnerMap.put(p.getPartnerDetails().getCode(), p);
 
-			log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
+			List<Future<Partners>> partial = new ArrayList<Future<Partners>>();
+			while (count < total)
+			{
+				partial.add(executor.submit(new FetchResourcePartners(target, offset)));
+
+				offset += PARTNERS_LIMIT;
+				count += partners.getPartner().size();
+
+				log.debug("getAlmaPartners [count/total/offset]: {}/{}/{}", count, total, offset);
+			}
+
+			for (Future<Partners> future : partial)
+			{
+				partners = future.get();
+				for (Partner p : partners.getPartner())
+					partnerMap.put(p.getPartnerDetails().getCode(), p);
+			}
 		}
-		while (count < total);
+		catch (ExecutionException ee)
+		{
+			log.error("execution failed: {}", ee.getMessage(), ee);
+		}
+		catch (InterruptedException ie)
+		{
+			log.error("execution interrupted: {}", ie.getMessage(), ie);
+		}
 
 		return partnerMap;
 	}
 
-	public Map<String, Partner> getLaddPartners()
+	public ConcurrentMap<String, Partner> getLaddPartners()
 	{
-		Map<String, Partner> result = new HashMap<String, Partner>();
+		String prefix = "NLA";
 
 		String institutionCode = config.getProperty("ladd.institution.code");
+
+		ConcurrentMap<String, Partner> result = new ConcurrentHashMap<String, Partner>();
 
 		WebClient webClient = webClientProvider.get();
 		HtmlPage page = null;
@@ -194,7 +242,6 @@ public class TaskUpdateResourcePartners implements Task
 			}
 
 			String org = row.getCell(1).asText();
-			String prefix = "NLA";
 			boolean suspended = "Suspended".equals(row.getCell(3).asText());
 
 			Partner partner = new Partner();
@@ -266,11 +313,13 @@ public class TaskUpdateResourcePartners implements Task
 		return result;
 	}
 
-	public Map<String, Partner> getTepunaPartners()
+	public ConcurrentMap<String, Partner> getTepunaPartners()
 	{
-		Map<String, Partner> result = new HashMap<String, Partner>();
+		String prefix = "NLNZ";
 
 		String institutionCode = config.getProperty("ladd.institution.code");
+
+		ConcurrentMap<String, Partner> result = new ConcurrentHashMap<String, Partner>();
 
 		WebClient webClient = webClientProvider.get();
 		TextPage page = null;
@@ -298,8 +347,9 @@ public class TaskUpdateResourcePartners implements Task
 					continue;
 				}
 
+				nuc = prefix + ":" + nuc;
+
 				String org = record.get(2);
-				String prefix = "NLNZ";
 
 				Partner partner = new Partner();
 
@@ -323,7 +373,7 @@ public class TaskUpdateResourcePartners implements Task
 				isoDetails.setAlternativeDocumentDelivery(false);
 				isoDetails.setIllServer(config.getProperty("alma.ill.server"));
 				isoDetails.setIllPort(Integer.parseInt(config.getProperty("alma.ill.port")));
-				isoDetails.setIsoSymbol(prefix + ":" + nuc);
+				isoDetails.setIsoSymbol(nuc);
 				isoDetails.setSendRequesterInformation(false);
 				isoDetails.setSharedBarcodes(true);
 				isoDetails.setRequestExpiryType(requestExpiryType);
@@ -437,46 +487,6 @@ public class TaskUpdateResourcePartners implements Task
 		}
 
 		return result;
-	}
-
-	public void addPartner(Partner partner)
-	{
-		persistPartner(partner, false);
-	}
-
-	public void updatePartner(Partner partner)
-	{
-		persistPartner(partner, true);
-	}
-
-	private void persistPartner(Partner partner, boolean replace)
-	{
-		String m = MediaType.APPLICATION_XML;
-
-		Partner result = null;
-
-		WebTarget t = webTargetProviderAlma.get().path("partners");
-
-		JAXBElement<Partner> p = of.createPartner(partner);
-
-		String code = partner.getPartnerDetails().getCode();
-		try
-		{
-			if (replace)
-			{
-				result = t.path(code).request(m).put(Entity.entity(p, m), Partner.class);
-			}
-			else
-			{
-				result = t.request(m).post(Entity.entity(p, m), Partner.class);
-			}
-		}
-		catch (Exception e)
-		{
-			log.error("error adding partner:\n{}", result, e);
-		}
-
-		log.debug("result:\n{}", result);
 	}
 
 	public Address getAddress(String s)
@@ -603,5 +613,74 @@ public class TaskUpdateResourcePartners implements Task
 	public static String getTaskName()
 	{
 		return TASKNAME;
+	}
+
+	private class UpdatePartnerTask implements Runnable
+	{
+		private WebTarget target;
+
+		private Partner partner;
+
+		private boolean replace;
+
+		public UpdatePartnerTask(WebTarget target, Partner partner, boolean replace)
+		{
+			this.target = target;
+			this.partner = partner;
+			this.replace = replace;
+		}
+
+		@Override
+		public void run()
+		{
+			String m = MediaType.APPLICATION_XML;
+
+			Partner result = null;
+
+			JAXBElement<Partner> p = of.createPartner(partner);
+
+			String code = partner.getPartnerDetails().getCode();
+			try
+			{
+				if (replace)
+				{
+					result = target.path(code).request(m).put(Entity.entity(p, m), Partner.class);
+				}
+				else
+				{
+					result = target.request(m).post(Entity.entity(p, m), Partner.class);
+				}
+			}
+			catch (Exception e)
+			{
+				log.error("error adding partner:\n{}", result, e);
+			}
+
+			log.debug("result:\n{}", result);
+		}
+	}
+
+	private class FetchResourcePartners implements Callable<Partners>
+	{
+		private WebTarget target;
+
+		private long offset;
+
+		public FetchResourcePartners(WebTarget target, long offset)
+		{
+			this.target = target;
+			this.offset = offset;
+		}
+
+		@Override
+		public Partners call() throws Exception
+		{
+			WebTarget t = target.queryParam("limit", PARTNERS_LIMIT).queryParam("offset", offset);
+			Partners partners = t.request(MediaType.APPLICATION_XML).get(Partners.class);
+
+			log.debug("fetchResourcePartners [offset]: {}", offset);
+
+			return partners;
+		}
 	}
 }

@@ -64,15 +64,15 @@ public class ToolkitLauncher
 
 		// execute the application
 		Calendar timeStart = Calendar.getInstance();
-		log.debug("executing: [{}]", timeStart.getTime());
+		log.info("executing: [{}]", timeStart.getTime());
 
 		app.run();
 
 		Calendar timeEnd = Calendar.getInstance();
-		log.debug("execution complete: [{}]", timeEnd.getTime());
+		log.info("execution complete: [{}]", timeEnd.getTime());
 
 		long diff = (timeEnd.getTimeInMillis() - timeStart.getTimeInMillis()) / 1000;
-		log.debug("time taken (seconds): {}", diff);
+		log.info("time taken (seconds): {}", diff);
 	}
 
 	private static Map<String, String> parseArgs(String[] args) throws Exception

@@ -55,6 +55,19 @@ public class TestUpdateResourcePartners
 	}
 
 	@Test
+	public void TestGetAlmaPartners()
+	{
+		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
+
+		Map<String, Partner> partners = task.getAlmaPartners();
+
+		Assert.assertNotNull(partners);
+		Assert.assertTrue(partners.size() > 5);
+
+		log.debug("partners count: {}", partners.size());
+	}
+
+	@Test
 	public void TestGetLaddPartners()
 	{
 		log.debug("running test: {}", Arrays.asList(new Throwable().getStackTrace()).get(0).getMethodName());
