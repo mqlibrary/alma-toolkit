@@ -61,14 +61,12 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 /**
- * A sample task using the Alma API. This is a simple task that gets a list of
- * users and provides their primaryId, name and status.
+ * A task to update Alma Resource Partners with LADD and Te Puna
+ * partners. This task updates the partner list, adding or updating
+ * codes, addresses and status (suspended/not suspended)
  * 
- * <p>
- * The optional parameters that can be provided are limit and offset. Otherwise,
- * the defaults are 100 and 0 respectively.
  * 
- * @author nishen
+ * @author nishen.naidoo@mq.edu.au
  */
 public class TaskUpdateResourcePartners implements Task
 {
@@ -242,81 +240,91 @@ public class TaskUpdateResourcePartners implements Task
 		HtmlTable table = (HtmlTable) page.getElementById("suspension");
 		for (HtmlTableRow row : table.getRows())
 		{
-			String nuc = row.getCell(0).asText();
-
-			if ("NUC symbol".equals(nuc) || institutionCode.equals(nuc))
+			String nuc = null;
+			try
 			{
-				log.debug("skipping nuc: {}", nuc);
-				continue;
+				nuc = row.getCell(0).asText();
+				
+				if ("NUC symbol".equals(nuc) || institutionCode.equals(nuc))
+				{
+					log.debug("skipping nuc: {}", nuc);
+					continue;
+				}
+				
+				String org = row.getCell(1).asText();
+				org = org.replace("&", "and");
+				
+				boolean suspended = "Suspended".equals(row.getCell(3).asText());
+				
+				Partner partner = new Partner();
+				partner.setLink("https://api-ap.hosted.exlibrisgroup.com/almaws/v1/partners/" + nuc);
+				
+				PartnerDetails partnerDetails = new PartnerDetails();
+				partner.setPartnerDetails(partnerDetails);
+				
+				ProfileDetails profileDetails = new ProfileDetails();
+				partnerDetails.setProfileDetails(profileDetails);
+				
+				profileDetails.setProfileType(ProfileType.ISO);
+				
+				RequestExpiryType requestExpiryType = new RequestExpiryType();
+				requestExpiryType.setValue("INTEREST_DATE");
+				requestExpiryType.setDesc("Expire by interest date");
+				
+				IsoDetails isoDetails = new IsoDetails();
+				profileDetails.setIsoDetails(isoDetails);
+				
+				isoDetails.setAlternativeDocumentDelivery(false);
+				isoDetails.setIllServer(config.getProperty("alma.ill.server"));
+				isoDetails.setIllPort(Integer.parseInt(config.getProperty("alma.ill.port")));
+				isoDetails.setIsoSymbol(prefix + ":" + nuc);
+				isoDetails.setSendRequesterInformation(false);
+				isoDetails.setSharedBarcodes(true);
+				isoDetails.setRequestExpiryType(requestExpiryType);
+				
+				SystemType systemType = new SystemType();
+				systemType.setValue("LADD");
+				systemType.setDesc("LADD");
+				
+				LocateProfile locateProfile = new LocateProfile();
+				locateProfile.setValue("LADD");
+				locateProfile.setDesc("LADD Locate Profile");
+				
+				partnerDetails.setStatus(suspended ? Status.INACTIVE : Status.ACTIVE);
+				partnerDetails.setCode(nuc);
+				partnerDetails.setName(org);
+				partnerDetails.setSystemType(systemType);
+				partnerDetails.setAvgSupplyTime(4);
+				partnerDetails.setDeliveryDelay(4);
+				partnerDetails.setCurrency("AUD");
+				partnerDetails.setBorrowingSupported(true);
+				partnerDetails.setBorrowingWorkflow("LADD_Borrowing");
+				partnerDetails.setLendingSupported(true);
+				partnerDetails.setLendingWorkflow("LADD_Lending");
+				partnerDetails.setLocateProfile(locateProfile);
+				partnerDetails.setHoldingCode(nuc);
+				
+				ContactInfo contactInfo = new ContactInfo();
+				partner.setContactInfo(contactInfo);
+				
+				Addresses addresses = new Addresses();
+				contactInfo.setAddresses(addresses);
+				
+				Emails emails = new Emails();
+				contactInfo.setEmails(emails);
+				
+				Phones phones = new Phones();
+				contactInfo.setPhones(phones);
+				
+				Notes notes = new Notes();
+				partner.setNotes(notes);
+				
+				result.put(partner.getPartnerDetails().getCode(), partner);
 			}
-
-			String org = row.getCell(1).asText();
-			boolean suspended = "Suspended".equals(row.getCell(3).asText());
-
-			Partner partner = new Partner();
-			partner.setLink("https://api-ap.hosted.exlibrisgroup.com/almaws/v1/partners/" + nuc);
-
-			PartnerDetails partnerDetails = new PartnerDetails();
-			partner.setPartnerDetails(partnerDetails);
-
-			ProfileDetails profileDetails = new ProfileDetails();
-			partnerDetails.setProfileDetails(profileDetails);
-
-			profileDetails.setProfileType(ProfileType.ISO);
-
-			RequestExpiryType requestExpiryType = new RequestExpiryType();
-			requestExpiryType.setValue("INTEREST_DATE");
-			requestExpiryType.setDesc("Expire by interest date");
-
-			IsoDetails isoDetails = new IsoDetails();
-			profileDetails.setIsoDetails(isoDetails);
-
-			isoDetails.setAlternativeDocumentDelivery(false);
-			isoDetails.setIllServer(config.getProperty("alma.ill.server"));
-			isoDetails.setIllPort(Integer.parseInt(config.getProperty("alma.ill.port")));
-			isoDetails.setIsoSymbol(prefix + ":" + nuc);
-			isoDetails.setSendRequesterInformation(false);
-			isoDetails.setSharedBarcodes(true);
-			isoDetails.setRequestExpiryType(requestExpiryType);
-
-			SystemType systemType = new SystemType();
-			systemType.setValue("LADD");
-			systemType.setDesc("LADD");
-
-			LocateProfile locateProfile = new LocateProfile();
-			locateProfile.setValue("LADD");
-			locateProfile.setDesc("LADD Locate Profile");
-
-			partnerDetails.setStatus(suspended ? Status.INACTIVE : Status.ACTIVE);
-			partnerDetails.setCode(nuc);
-			partnerDetails.setName(org);
-			partnerDetails.setSystemType(systemType);
-			partnerDetails.setAvgSupplyTime(4);
-			partnerDetails.setDeliveryDelay(4);
-			partnerDetails.setCurrency("AUD");
-			partnerDetails.setBorrowingSupported(true);
-			partnerDetails.setBorrowingWorkflow("LADD_Borrowing");
-			partnerDetails.setLendingSupported(true);
-			partnerDetails.setLendingWorkflow("LADD_Lending");
-			partnerDetails.setLocateProfile(locateProfile);
-			partnerDetails.setHoldingCode(nuc);
-
-			ContactInfo contactInfo = new ContactInfo();
-			partner.setContactInfo(contactInfo);
-
-			Addresses addresses = new Addresses();
-			contactInfo.setAddresses(addresses);
-
-			Emails emails = new Emails();
-			contactInfo.setEmails(emails);
-
-			Phones phones = new Phones();
-			contactInfo.setPhones(phones);
-
-			Notes notes = new Notes();
-			partner.setNotes(notes);
-
-			result.put(partner.getPartnerDetails().getCode(), partner);
+			catch (Exception e)
+			{
+				log.error("failed to process partner: {}", nuc);
+			}
 		}
 
 		return result;
