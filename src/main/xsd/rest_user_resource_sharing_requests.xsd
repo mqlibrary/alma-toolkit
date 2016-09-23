@@ -1,0 +1,32 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xs:annotation>
+		<xs:documentation>List of resource sharing requests in Alma.</xs:documentation>
+	</xs:annotation>
+
+	<xs:include schemaLocation="rest_user_resource_sharing_request.xsd" />
+
+	<xs:element name="user_resource_sharing_requests" type="user_resource_sharing_requests" />
+
+	<xs:complexType name="user_resource_sharing_requests">
+		<xs:annotation>
+			<xs:documentation>A list of resource sharing requests.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="user_resource_sharing_request"
+				type="user_resource_sharing_request">
+				<xs:annotation>
+					<xs:documentation>UserResourceSharingRequest object.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+
+		<xs:attribute name="total_record_count" type="xs:long">
+			<xs:annotation>
+				<xs:documentation>The total number of resource sharing requests in the given list.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+</xs:schema>

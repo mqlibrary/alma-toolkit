@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:documentation>Resource sharing request can be a Borrowing request or a Lending request:
+			Borrowing request: user's request for material that does not exist in the institution's libraries.
+			The request will be fulfilled by a partner that the institution has an agreement with.
+			The material will be delivered directly to the requester, or will be picked up in the institution, according to the request details and the library's policy.
+			Lending request: request for material of other institution which does not have it.
+		</xs:documentation>
+	</xs:annotation>
+
+	<xs:element name="user_resource_sharing_request" type="user_resource_sharing_request" />
+
+	<xs:complexType name="user_resource_sharing_request">
+		<xs:annotation>
+			<xs:documentation>Resource sharing request Object.</xs:documentation>
+		</xs:annotation>
+		<xs:all>
+			<xs:element name="request_id" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Internal identifier of the resource sharing request in Alma.
+						Should be used in subsequent queries regarding the request.
+						Relevant for borrowing requests.
+						Not relevant for lending requests.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="external_id" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>External identifier of the resource sharing request.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="created_date" type="xs:date" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The request creation date.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="last_modified_date" type="xs:date" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Date by which the last change to the request was made.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="created_time" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The request creation time.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="last_modified_time" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Time by which the last change to the request was made.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="status" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>rs_request_status</xs:codeTable>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>The resource sharing request status.
+						Borrowing request: Possible codes are listed in MandatoryBorrowingWorkflowSteps or OptionalBorrowingWorkflowSteps [code tables|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].
+						Lending request: Possible codes are listed in MandatoryLendingWorkflowSteps or OptionalLendingWorkflowSteps [code tables|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="owner" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The resource sharing library code.
+					See [Get libraries API|https://developers.exlibrisgroup.com/alma/apis/conf/GET/gwPcGly021p29HpB7XTI4Dp4I8TKv6CAxBlD4LyRaVE=/37088dc9-c685-4641-bc7f-60b5ca7cabed].
+					Borrowing request: Optional. Used only when there are more than one resource sharing library defined for the user.
+					Lending library: Mandatory.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="partner" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The code of the partner related to this request.
+						See [Get partners API|https://developers.exlibrisgroup.com/alma/apis/partners/GET/gwPcGly021piAVNPLaef7suP1zfa6Lui/8883ef41-c3b8-4792-9ff8-cb6b729d6e07].
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+							<xs:attribute name="link" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="user_request" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>The request linked to the resource sharing request.
+						Borrowing requests: this is the related user request.
+						Lending requests: this is the move/digitization request (if exists).
+						See [GET user's request API|https://developers.exlibrisgroup.com/alma/apis/users/GET/gwPcGly021r0XQMGAttqcPPFoLNxBoEZbQsUC/MWTX7aNWi0EYKYFUfYyI8KvpG73JPdiJpJhUA=/0aa8d36f-53d6-48ff-8996-485b90b103e4].
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="link" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="requester" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The primary identifier and full name of the requesting user.
+						Relevant for borrowing requests.
+						Not relevant for lending requests.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:codeTable>requested_media</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+							<xs:attribute name="link" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="requested_media" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>requested_media</xs:codeTable>
+					</xs:appinfo>
+					<xs:documentation>A description of the requested media.
+						possible values are 1-7 (codes from Basic Requested Media code table), and the codes from 'AdditionalRequestedMedia' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].
+						The valid values are according to the "Requested media definition" mapping table.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="format" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>RequestFormats</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>Format of the resource requested. For example, physical or digital. Mandatory. Possible codes are listed in RequestFormats [code tables|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="allow_other_formats" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether other formats besides the above are acceptable.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="supplied_format" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>RequestFormats</xs:codeTable>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>Format of the supplied item. For example, physical or digital.
+						Possible codes are listed in RequestFormats [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="preferred_send_method" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>ResourceSharingRequestSendMethod</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>Preferred send method.
+						Possible options are listed in 'ResourceSharingRequestSendMethod' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API]. Currently not relevant for lending requests.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="requested_language" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>ResourceSharingLanguages</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>The requested language for the resource sharing request.
+						Possible codes are the enabled fields in ResourceSharingLanguages [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API]. Default is null.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="pickup_location" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						The pickup library code where the resource will be delivered.
+						Relevant and mandatory for physical format delivery Borrowing request.
+						Optional for digital format.
+						Not relevant for lending requests.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="reading_room" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The code of the reading room where the item will be picked up.
+					Mandatory when for_reading_room_only is true.
+					Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="last_interest_date" type="xs:date" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Last date the request is needed.
+						Optional parameter.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="use_alternative_address" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>An indication of whether the delivery should be to an alternative address. Default is false.
+					Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text_email" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Borrowing request: In use with alternative_address only. In use when sending in digital format.
+						Lending request: Requester's Email.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text_postal_1" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>In use with alternative_address only.
+						Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text_postal_2" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>In use with alternative_address only.
+						Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text_postal_3" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>In use with alternative_address only.
+					Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="text_postal_4" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>In use with alternative_address only.
+					Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="shipping_cost" type="amount" minOccurs="0"
+				maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>The shipping cost.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="copyright_status" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>ResourceSharingCopyrightsStatus</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>
+						The copyright status of the request. Relevant if requested format is Digital, and 'rs_borrower_copyright_management' in customer parameters is true. Possible options are listed in 'ResourceSharingCopyrightsStatus' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API], default is generated per request. Relevant for GET, POST and PUT of borrowing requests, and GET of lending requests.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="agree_to_copyright_terms" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether the requester has agreed to the copyright terms.
+						Mandatory for borrowing requests. Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="need_patron_info" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether patron information is needed.
+						Not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="willing_to_pay" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether patron is willing to pay.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="citation_type" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:codeTable>PhysicalReadingListCitationTypes</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>Type of the requested resource. For example, book or article.
+						Mandatory for borrowing requests.
+						Not relevant for lending requests.
+						Possible options are listed in 'PhysicalReadingListCitationTypes' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API], default is generated per request.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>General note.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="maximum_fee" type="xs:float" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Maximum fee the user is willing to pay for the request.
+						Currently not relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="has_active_notes" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether the request has active notes.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="rs_notes" type="rs_notes" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The requests's related notes.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="printed" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether the request is printed.
+						Relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="reported" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether the request is reported.
+					Relevant for lending requests.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="level_of_service" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						The code of the resource sharing request Level of Service.
+						Possible options are listed in 'LevelOfService' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API], default is generated per request.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:codeTable>LevelOfService</xs:codeTable>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<!-- Resource Information -->
+			<xs:element name="mms_id" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>MMS ID of the requested resource. Output parameter.
+					Not relevant for lending requests. See [GET BIB API|https://developers.exlibrisgroup.com/alma/apis/bibs/GET/gwPcGly021om4RTvtjbPleCklCGxeYAf3JPdiJpJhUA=/af2fb69d-64f4-42bc-bb05-d8a0ae56936e].
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="barcode" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Barcode of the supplied item. Output parameter.
+					Relevant only for supplied lending requests.
+					</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="title" type="xs:string" minOccurs="1" maxOccurs="1" nillable="false">
+				<xs:annotation>
+					<xs:documentation>Title of the requested resource. Mandatory parameter.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="issn" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>ISSN of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isbn" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>ISBN of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="author" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Author of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="author_initials" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Author initials of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="year" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Year of publication of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="publisher" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Publisher of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="place_of_publication" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The publication place of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="edition" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The edition of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="specific_edition" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Indication whether edition is used in ISO Protocol and in Locate process. Default is true. Relevant when a book is requested.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="volume" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The volume number of the journal that contains the article.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="journal_title" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The title of the journal. Relevant when an article is requested.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="issue" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The issue of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="chapter" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The chapter number in the journal that contains the article.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="pages" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The relevant pages of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="start_page" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The relevant start page of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="end_page" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The end page of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="part" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The part of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="source" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The source of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="series_title_number" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The series title number of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="doi" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The doi of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="pmid" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The pmid of the requested resource.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="additional_person_name" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The name of an additional contact.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="call_number" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The call number of the book. Indicates the library shelf on which the books are located.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="bib_note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The note of the bibliographic record.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="lcc_number" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The library of congress number of the book.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="oclc_number" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>The oclc number of the book.</xs:documentation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="amount">
+		<xs:all>
+			<xs:annotation>
+				<xs:appinfo>
+					<xs:tags>api get post</xs:tags>
+				</xs:appinfo>
+				<xs:documentation>The amount to pay.</xs:documentation>
+			</xs:annotation>
+			<xs:element name="sum" type="xs:decimal" maxOccurs="1"
+				minOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+					</xs:appinfo>
+					<xs:documentation>The total sum.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="currency" maxOccurs="1" minOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<xs:tags>api get post</xs:tags>
+						<xs:codeTable>MT_CurrencySubset_by_CT_Currency_CT</xs:codeTable>
+					</xs:appinfo>
+					<xs:documentation>The currency.
+						Possible values are listed in 'Currency_CT' [code table|https://developers.exlibrisgroup.com/blog/Working-with-the-code-tables-API].
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="desc" type="xs:string" use="optional" />
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="rs_notes">
+		<xs:annotation>
+			<xs:appinfo>
+				<xs:tags>api get post put</xs:tags>
+			</xs:appinfo>
+			<xs:documentation>List of related notes that appear in the Notes tab in the UI..</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="rs_note" type="rs_note" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Specific related note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="rs_note">
+		<xs:annotation>
+			<xs:appinfo>
+				<xs:tags>api get post put</xs:tags>
+			</xs:appinfo>
+			<xs:documentation>Specific related note.</xs:documentation>
+		</xs:annotation>
+		<xs:all>
+			<xs:element name="content" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The note's text. Mandatory.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="created_date" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The creation date of the note. Default is the current date.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="created_by" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The creator of the note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+</xs:schema>

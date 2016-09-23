@@ -5,7 +5,7 @@
 
 	<groupId>org.nishen.alma</groupId>
 	<artifactId>alma-toolkit</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.7</version>
 	<packaging>jar</packaging>
 
 	<name>alma-toolkit</name>
@@ -72,6 +72,11 @@
 			<version>1.3</version>
 		</dependency>
 		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
@@ -86,8 +91,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.2</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<debug>true</debug>
 					<debuglevel>lines,vars,source</debuglevel>
 				</configuration>
@@ -239,6 +244,36 @@
 								<include>xsd/rest_notes.xsd</include>
 								<include>xsd/rest_partner.xsd</include>
 								<include>xsd/rest_partners.xsd</include>
+							</schemaIncludes>
+							<plugins>
+								<plugin>
+									<groupId>org.jvnet.jaxb2_commons</groupId>
+									<artifactId>jaxb2-basics</artifactId>
+									<version>0.9.3</version>
+								</plugin>
+							</plugins>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-resource-sharing-req</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<extension>true</extension>
+							<episode>false</episode>
+							<generatePackage>org.nishen.alma.toolkit.entity.resreq</generatePackage>
+							<generateDirectory>${project.build.directory}/generated-sources/xjc5</generateDirectory>
+							<args>
+								<arg>-XtoString</arg>
+								<arg>-Xequals</arg>
+								<arg>-XhashCode</arg>
+							</args>
+							<schemaDirectory>${basedir}/src/main</schemaDirectory>
+							<schemaIncludes>
+								<include>xsd/rest_user_resource_sharing_requests.xsd</include>
+								<include>xsd/rest_user_resource_sharing_request.xsd</include>
 							</schemaIncludes>
 							<plugins>
 								<plugin>
