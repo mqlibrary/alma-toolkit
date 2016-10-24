@@ -1,10 +1,13 @@
 package org.nishen.alma.toolkit.tasks;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -95,7 +98,9 @@ public class TaskCheckResourceRequests implements Task
 			mesg.append("TITLE: ").append(r.getTitle()).append("\n");
 			if (r.getCallNumber() != null && !"".equals(r.getCallNumber()))
 				mesg.append("CALL NUMBER: ").append(r.getCallNumber()).append("\n");
-			mesg.append("CREATED AT: ").append(r.getCreatedTime()).append("\n");
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(r.getCreatedTime().toGregorianCalendar().getTime());
+			mesg.append("CREATED AT: ").append(cal.getTime()).append("\n");
 			mesg.append("--\n\n");
 		}
 
@@ -116,12 +121,7 @@ public class TaskCheckResourceRequests implements Task
 	@Override
 	public Map<String, String> getUsageOptions()
 	{
-		Map<String, String> options = new HashMap<String, String>();
-
-		options.put("-title \"x\"", "the name of the report to fetch (use double quotes if there are spaces)");
-		options.put("-csv", "CSV output file");
-
-		return options;
+		return new HashMap<String, String>();
 	}
 
 	public static String getTaskName()
