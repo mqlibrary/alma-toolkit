@@ -5,7 +5,7 @@
 
 	<groupId>org.nishen.alma</groupId>
 	<artifactId>alma-toolkit</artifactId>
-	<version>0.0.8</version>
+	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>alma-toolkit</name>
@@ -24,22 +24,22 @@
 		<dependency>
 			<groupId>com.google.inject</groupId>
 			<artifactId>guice</artifactId>
-			<version>3.0</version>
+			<version>4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-persist</artifactId>
-			<version>3.0</version>
+			<version>4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-multibindings</artifactId>
-			<version>3.0</version>
+			<version>4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-assistedinject</artifactId>
-			<version>3.0</version>
+			<version>4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.htmlunit</groupId>

@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ServerErrorException;
@@ -48,7 +51,7 @@ public class TaskSetUserPurgeDates implements Task
 
 	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-	private Provider<WebTarget> webTargetProvider;
+	private Provider<WebTarget> webTargetProvider = null;
 
 	private String userListFilename = null;
 
@@ -110,6 +113,8 @@ public class TaskSetUserPurgeDates implements Task
 				}
 			}
 
+		this.webTargetProvider = webTargetProvider;
+
 		log.debug("initialised {}", this.getClass().getCanonicalName());
 	}
 
@@ -146,58 +151,29 @@ public class TaskSetUserPurgeDates implements Task
 			return;
 		}
 
-		WebTarget target = webTargetProvider.get();
-		target = target.path("users");
-
-		for (String primaryId : userList)
+		try
 		{
-			try
-			{
-				log.info("processing user: {}", primaryId);
+			WebTarget target = webTargetProvider.get();
+			target = target.path("users");
 
-				WebTarget t = target.path(primaryId);
-				User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
-				log.info("fetched user: {}", user.getPrimaryId());
-
-				user.setExpiryDate(makeDate(expiryDate));
-				user.setPurgeDate(makeDate(purgeDate));
-
-				JAXBElement<User> jaxbUser = of.createUser(user);
-				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML),
-				                                                User.class);
-
-				log.info("updated user [{}] - {}/{}", user.getPrimaryId(), user.getExpiryDate(), user.getPurgeDate());
-			}
-			catch (ClientErrorException cee)
+			ExecutorService executor = Executors.newFixedThreadPool(10);
+			for (String primaryId : userList)
 			{
-				try
-				{
-					WebServiceResult error = cee.getResponse().readEntity(WebServiceResult.class);
-					for (Error e : error.getErrorList().getError())
-					{
-						String mesg = e.getErrorMessage();
-						if (mesg != null)
-							mesg = mesg.replaceAll("\n", " ");
-					}
-				}
-				catch (MessageBodyProviderNotFoundException e)
-				{
-					String error = cee.getResponse().readEntity(String.class);
-					Object[] args = new Object[] { primaryId, error };
-					log.error("TaskFixUserIdentifiers[{}] error: {}", args);
-				}
+				executor.execute(new SetUserPurgeDate(target, primaryId, expiryDate, purgeDate));
 			}
-			catch (ServerErrorException see)
-			{
-				Object[] args = new Object[] { primaryId, see.getResponse().getStatusInfo().getStatusCode(),
-				                               see.getMessage() };
-				log.error("TaskFixUserIdentifiers[{}] {}: {}", args);
-			}
-			catch (Exception e)
-			{
-				Object[] args = new Object[] { primaryId, e.getMessage(), e };
-				log.error("TaskFixUserIdentifiers[{}]: {}", args);
-			}
+
+			executor.shutdown();
+			executor.awaitTermination(1L, TimeUnit.HOURS);
+		}
+		catch (InterruptedException ie)
+		{
+			log.error("executor awaiting termination was interrupted: {}", ie);
+			log.debug("{}", ie);
+		}
+		catch (Exception e)
+		{
+			log.error("execution failure: {}", e);
+			log.debug("{}", e);
 		}
 	}
 
@@ -268,5 +244,75 @@ public class TaskSetUserPurgeDates implements Task
 	public static String getTaskName()
 	{
 		return TASKNAME;
+	}
+
+	private class SetUserPurgeDate implements Runnable
+	{
+		private WebTarget target;
+
+		private String primaryId;
+
+		private Date expiryDate;
+
+		private Date purgeDate;
+
+		public SetUserPurgeDate(WebTarget target, String primaryId, Date expiryDate, Date purgeDate)
+		{
+			this.target = target;
+			this.primaryId = primaryId;
+			this.expiryDate = expiryDate;
+			this.purgeDate = purgeDate;
+		}
+
+		public void run()
+		{
+			try
+			{
+				log.debug("processing user: {}", primaryId);
+
+				WebTarget t = target.path(primaryId);
+				User user = t.request(MediaType.APPLICATION_XML_TYPE).get(User.class);
+				log.debug("fetched user: {}", user.getPrimaryId());
+
+				user.setExpiryDate(makeDate(expiryDate));
+				user.setPurgeDate(makeDate(purgeDate));
+
+				JAXBElement<User> jaxbUser = of.createUser(user);
+				user = t.request(MediaType.APPLICATION_XML).put(Entity.entity(jaxbUser, MediaType.APPLICATION_XML),
+				                                                User.class);
+
+				log.info("updated user [{}] - {}/{}", user.getPrimaryId(), user.getExpiryDate(), user.getPurgeDate());
+			}
+			catch (ClientErrorException cee)
+			{
+				try
+				{
+					WebServiceResult error = cee.getResponse().readEntity(WebServiceResult.class);
+					for (Error e : error.getErrorList().getError())
+					{
+						String mesg = e.getErrorMessage();
+						if (mesg != null)
+							mesg = mesg.replaceAll("\n", " ");
+					}
+				}
+				catch (MessageBodyProviderNotFoundException e)
+				{
+					String error = cee.getResponse().readEntity(String.class);
+					Object[] args = new Object[] { primaryId, error };
+					log.error("TaskSetUserPurgeDates[{}] error: {}", args);
+				}
+			}
+			catch (ServerErrorException see)
+			{
+				Object[] args = new Object[] { primaryId, see.getResponse().getStatusInfo().getStatusCode(),
+				                               see.getMessage() };
+				log.error("TaskSetUserPurgeDates[{}] {}: {}", args);
+			}
+			catch (Exception e)
+			{
+				Object[] args = new Object[] { primaryId, e.getMessage(), e };
+				log.error("TaskSetUserPurgeDates[{}]: {}", args);
+			}
+		}
 	}
 }

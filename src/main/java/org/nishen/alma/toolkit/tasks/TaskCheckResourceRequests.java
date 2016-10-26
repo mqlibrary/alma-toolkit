@@ -2,12 +2,10 @@ package org.nishen.alma.toolkit.tasks;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;

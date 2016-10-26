@@ -80,7 +80,10 @@ public class ToolkitLauncher
 		Map<String, String> options = new HashMap<String, String>();
 
 		if (args.length == 0)
+		{
+			options.put("h", "true");
 			return options;
+		}
 
 		for (int x = 0; x < args.length; x++)
 		{
