@@ -21,7 +21,10 @@ Extract the contents of one of the archives into the folder you want to run it
 from, using either tar or unzip as required.
 
 ### Run
-To run the application:
+To run the application, first configure your institutions values in the
+[app.properties](https://github.com/mqlibrary/alma-toolkit/blob/master/src/main/config/app.properties)
+file. Place this file in the same folder from which you are
+running the jar. You can then execute the jar as below:
 ```
 java -jar alma-toolkit-x.x.x.jar [options]
 ```
