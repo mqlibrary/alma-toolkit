@@ -7,7 +7,6 @@
 		<format>zip</format>
 		<format>tar.gz</format>
 	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
 	<files>
 		<file>
 			<destName>${artifact.artifactId}-${artifact.version}.jar</destName>
