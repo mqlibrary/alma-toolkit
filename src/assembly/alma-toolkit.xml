@@ -25,6 +25,25 @@
 			<lineEnding>dos</lineEnding>
 			<filtered>true</filtered>
 		</fileSet>
+		<fileSet>
+			<directory>src/main/scripts</directory>
+			<outputDirectory />
+			<includes>
+				<include>*.cmd</include>
+			</includes>
+			<lineEnding>dos</lineEnding>
+			<filtered>true</filtered>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/scripts</directory>
+			<outputDirectory />
+			<includes>
+				<include>*.sh</include>
+			</includes>
+			<fileMode>0755</fileMode>
+			<lineEnding>dos</lineEnding>
+			<filtered>true</filtered>
+		</fileSet>
 	</fileSets>
 
 </assembly>
