@@ -12,13 +12,13 @@
 		<file>
 			<destName>${artifact.artifactId}-${artifact.version}.jar</destName>
 			<source>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar</source>
-			<outputDirectory>/</outputDirectory>
+			<outputDirectory />
 		</file>
 	</files>
 	<fileSets>
 		<fileSet>
 			<directory>src/main/config</directory>
-			<outputDirectory>/</outputDirectory>
+			<outputDirectory />
 			<includes>
 				<include>*.properties</include>
 			</includes>
@@ -26,4 +26,5 @@
 			<filtered>true</filtered>
 		</fileSet>
 	</fileSets>
+
 </assembly>
