@@ -71,15 +71,15 @@ public class TaskCheckResourceRequests implements Task
 
 		target = target.path("task-lists/rs/lending-requests").queryParam("library", institutionCode);
 
-		UserResourceSharingRequests requests = target.request(MediaType.APPLICATION_XML_TYPE)
-		                                             .get(UserResourceSharingRequests.class);
+		UserResourceSharingRequests requests =
+		        target.request(MediaType.APPLICATION_XML_TYPE).get(UserResourceSharingRequests.class);
 
 		List<UserResourceSharingRequest> requestList = new ArrayList<UserResourceSharingRequest>();
 		for (UserResourceSharingRequest r : requests.getUserResourceSharingRequest())
 		{
-			log.info("level of service [{}]: {}", r.getLevelOfService().getValue(), r.getTitle());
-			if ("RUSH_LOCAL".equals(r.getLevelOfService().getValue())
-			    || "EXPRESS_LOCAL".equals(r.getLevelOfService().getValue()))
+			log.debug("level of service [{}]: {}", r.getLevelOfService().getValue(), r.getTitle());
+			if ("RUSH_LOCAL".equals(r.getLevelOfService().getValue()) ||
+			    "EXPRESS_LOCAL".equals(r.getLevelOfService().getValue()))
 				requestList.add(r);
 		}
 
@@ -87,24 +87,50 @@ public class TaskCheckResourceRequests implements Task
 			return;
 
 		StringBuilder mesg = new StringBuilder();
-		mesg.append("Dear ILL Librarian,\n\n");
-		mesg.append("There are urgent requests requiring your attention:\n\n");
+		mesg.append("Dear ILL Librarian,").append("<br/><br/>");
+		mesg.append("There are urgent requests requiring your attention:").append("<br/><br/>");
 
+		mesg.append("<style type=\"text/css\">\n");
+		mesg.append("table th { text-align: right; width: 120px; color: white; ");
+		mesg.append("background: #770000; padding-right: 5px; }");
+		mesg.append("\n</style>\n\n");
+
+		mesg.append("<table style=\"width: 100%; text-align: left;\">");
 		for (UserResourceSharingRequest r : requestList)
 		{
-			mesg.append("EXTERNAL ID: ").append(r.getExternalId()).append("\n");
-			mesg.append("TITLE: ").append(r.getTitle()).append("\n");
-			if (r.getCallNumber() != null && !"".equals(r.getCallNumber()))
-				mesg.append("CALL NUMBER: ").append(r.getCallNumber()).append("\n");
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(r.getCreatedTime().toGregorianCalendar().getTime());
-			mesg.append("CREATED AT: ").append(cal.getTime()).append("\n");
-			mesg.append("--\n\n");
-		}
 
-		mesg.append("\n");
-		mesg.append("Thanks,\n");
-		mesg.append("User Resource Request Watcher\n\n");
+			if (r.getCallNumber() != null && !"".equals(r.getCallNumber()))
+			{
+				mesg.append("<tr>");
+				mesg.append("<th>").append("CALL NUMBER").append("</th>");
+				mesg.append("<td>").append(r.getCallNumber()).append("</td>");
+				mesg.append("</tr>");
+			}
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("TITLE").append("</th>");
+			mesg.append("<td>").append(r.getTitle()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("CREATED AT").append("</th>");
+			mesg.append("<td>").append(cal.getTime()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("EXTERNAL ID").append("</th>");
+			mesg.append("<td>").append(r.getExternalId()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr><td colspan=\"2\">&nbsp</td></tr>");
+		}
+		mesg.append("</table>");
+
+		mesg.append("<br/>");
+		mesg.append("Thanks,").append("<br/>");
+		mesg.append("ILL Alert Bot").append("<br/><br/>");
 
 		try
 		{

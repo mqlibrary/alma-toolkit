@@ -36,7 +36,8 @@ public class MailUtil
 		}
 
 		msg.setSubject(subj);
-		msg.setText(mesg);
+		msg.setContent(mesg, "text/html");
+		//msg.setText(mesg);
 
 		// Send the message
 		Transport.send(msg);
