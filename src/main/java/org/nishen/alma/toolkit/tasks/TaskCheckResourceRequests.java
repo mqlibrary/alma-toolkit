@@ -77,14 +77,21 @@ public class TaskCheckResourceRequests implements Task
 		List<UserResourceSharingRequest> requestList = new ArrayList<UserResourceSharingRequest>();
 		for (UserResourceSharingRequest r : requests.getUserResourceSharingRequest())
 		{
-			log.debug("level of service [{}]: {}", r.getLevelOfService().getValue(), r.getTitle());
-			if ("RUSH_LOCAL".equals(r.getLevelOfService().getValue()) ||
-			    "EXPRESS_LOCAL".equals(r.getLevelOfService().getValue()))
+			String levelOfService = r.getLevelOfService().getValue();
+			String status = r.getStatus().getValue();
+
+			log.debug("level of service [{}]: {}", levelOfService, r.getTitle());
+
+			if (("REQUEST_CREATED_LEND".equals(status) || "LOCATE_FAILED".equals(status)) &&
+			    ("RUSH_LOCAL".equals(levelOfService) || "EXPRESS_LOCAL".equals(levelOfService)))
 				requestList.add(r);
 		}
 
 		if (requestList.size() == 0)
+		{
+			log.info("no urgent requests...");
 			return;
+		}
 
 		StringBuilder mesg = new StringBuilder();
 		mesg.append("Dear ILL Librarian,").append("<br/><br/>");
@@ -98,8 +105,41 @@ public class TaskCheckResourceRequests implements Task
 		mesg.append("<table style=\"width: 100%; text-align: left;\">");
 		for (UserResourceSharingRequest r : requestList)
 		{
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(r.getCreatedTime().toGregorianCalendar().getTime());
+			Calendar created = Calendar.getInstance();
+			created.setTime(r.getCreatedTime().toGregorianCalendar().getTime());
+
+			Calendar modified = Calendar.getInstance();
+			modified.setTime(r.getLastModifiedTime().toGregorianCalendar().getTime());
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("EXTERNAL ID").append("</th>");
+			mesg.append("<td>").append(r.getExternalId()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("CREATED").append("</th>");
+			mesg.append("<td>").append(created.getTime()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("MODIFIED").append("</th>");
+			mesg.append("<td>").append(modified.getTime()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("STATUS").append("</th>");
+			mesg.append("<td>").append(r.getStatus().getValue()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("SERVICE LEVEL").append("</th>");
+			mesg.append("<td>").append(r.getLevelOfService().getValue()).append("</td>");
+			mesg.append("</tr>");
+
+			mesg.append("<tr>");
+			mesg.append("<th>").append("TITLE").append("</th>");
+			mesg.append("<td>").append(r.getTitle()).append("</td>");
+			mesg.append("</tr>");
 
 			if (r.getCallNumber() != null && !"".equals(r.getCallNumber()))
 			{
@@ -108,21 +148,6 @@ public class TaskCheckResourceRequests implements Task
 				mesg.append("<td>").append(r.getCallNumber()).append("</td>");
 				mesg.append("</tr>");
 			}
-
-			mesg.append("<tr>");
-			mesg.append("<th>").append("TITLE").append("</th>");
-			mesg.append("<td>").append(r.getTitle()).append("</td>");
-			mesg.append("</tr>");
-
-			mesg.append("<tr>");
-			mesg.append("<th>").append("CREATED AT").append("</th>");
-			mesg.append("<td>").append(cal.getTime()).append("</td>");
-			mesg.append("</tr>");
-
-			mesg.append("<tr>");
-			mesg.append("<th>").append("EXTERNAL ID").append("</th>");
-			mesg.append("<td>").append(r.getExternalId()).append("</td>");
-			mesg.append("</tr>");
 
 			mesg.append("<tr><td colspan=\"2\">&nbsp</td></tr>");
 		}
