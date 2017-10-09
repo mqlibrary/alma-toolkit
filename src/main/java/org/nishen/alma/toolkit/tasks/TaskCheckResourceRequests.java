@@ -100,6 +100,7 @@ public class TaskCheckResourceRequests implements Task
 		mesg.append("<style type=\"text/css\">\n");
 		mesg.append("table th { text-align: right; width: 120px; color: white; ");
 		mesg.append("background: #770000; padding-right: 5px; }");
+		mesg.append("table td { text-align: left; background: #eeeeee; padding-left: 5px; }");
 		mesg.append("\n</style>\n\n");
 
 		mesg.append("<table style=\"width: 100%; text-align: left;\">");
@@ -149,7 +150,7 @@ public class TaskCheckResourceRequests implements Task
 				mesg.append("</tr>");
 			}
 
-			mesg.append("<tr><td colspan=\"2\">&nbsp</td></tr>");
+			mesg.append("<tr><td colspan=\"2\" style=\"background: white;\">&nbsp</td></tr>");
 		}
 		mesg.append("</table>");
 
