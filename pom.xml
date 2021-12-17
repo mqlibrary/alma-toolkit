@@ -140,7 +140,9 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
-							<descriptor>src/assembly/alma-toolkit.xml</descriptor>
+							<descriptors>
+								<descriptor>src/assembly/alma-toolkit.xml</descriptor>
+							</descriptors>
 						</configuration>
 					</execution>
 				</executions>
